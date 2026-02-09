@@ -41,33 +41,65 @@ class Tokenizer:
                 return Token(TokenType.ASSIGN, lexeme = f"{char}")
             
             case '(':
-                raise NotImplementedError
+                return Token(TokenType.LPAREN, lexeme = f"{char}")
                 
             case ')': 
-                raise NotImplementedError
+                return Token(TokenType.RPAREN, lexeme = f"{char}")
             
             case '+':
-                raise NotImplementedError
+                return Token(TokenType.PLUS, lexeme = f"{char}")
             
             case '-':
-                raise NotImplementedError
+                return Token(TokenType.MINUS, lexeme = f"{char}")
             
             case '*':
-                raise NotImplementedError
+                return Token(TokenType.TIMES, lexeme = f"{char}")
             
             case '/':
-                raise NotImplementedError
+                return Token(TokenType.DIVIDE, lexeme = f"{char}")
             
             case '^':
-                raise NotImplementedError
+                return Token(TokenType.EXPONENT, lexeme = f"{char}")
             
             case 'i':
-                raise NotImplementedError
+                next = self.cs.read()
+                while next in {' ', '\n', '\r', '\t'}:
+                    next = self.cs.read()
+                if next in RESERVED:
+                    raise ValueError(f"Invalid variable character: '{next}'")
+                return Token(TokenType.INTDEC, lexeme = f"{char}{next}", name = f"{next}")
 
             case 'p':
-                raise NotImplementedError
+                next = self.cs.read()
+                while next in {' ', '\n', '\r', '\t'}:
+                    next = self.cs.read()
+                if next in RESERVED:
+                    raise ValueError(f"Invalid variable character: '{next}'")
+                return Token(TokenType.PRINT, lexeme = f"{char}{next}", name = f"{next}")
             
+            case '0':
+                next = self.cs.peek()
+                if next in ["1","2","3","4","5","6","7","8","9","0"]:
+                    raise ValueError("Integer literal cannot have a leading zero")
+                else:
+                    return Token(TokenType.INTLIT, lexeme = f"{char}", intvalue = f"{char}")
+
+            case "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9":
+                number = char
+                next = self.cs.peek()
+                        
+                while next in ["1","2","3","4","5","6","7","8","9","0"]:
+                    self.cs.advance()
+                    number += next
+                    next = self.cs.peek()
+
+                return Token(TokenType.INTLIT, lexeme = f"{number}", intvalue = f"{number}")
+
             case _:
+
+                if char in VALID_VARS:
+                    return Token(TokenType.VARREF, lexeme = f"{char}")
+
                 pass # Move on to secondary inspection to handle digits, vars, error case
 
         if char.isdigit():
