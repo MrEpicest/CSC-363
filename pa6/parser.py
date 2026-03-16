@@ -88,7 +88,9 @@ def parse_expression(ts: TokenStream) -> ASTNode:
             if (next.tokentype in operatortypes) or (next.tokentype == TokenType.RPAREN) or (next.tokentype == TokenType.EOF):        
                 valstack.append(IntLitNode(tok.intvalue))
 
-                if len(opstack) > 0 and opstack[-1].tokentype == TokenType.NEGATIVE:
+                # "not next.tokentype == TokenType.EXPONENT" so that a negative held to an exponentiation 
+                # doesn't instead get held to the integer (e.g. -2^2)
+                if len(opstack) > 0 and opstack[-1].tokentype == TokenType.NEGATIVE and not next.tokentype == TokenType.EXPONENT:
                     un_reduce(opstack, valstack)
 
                 continue
@@ -102,9 +104,11 @@ def parse_expression(ts: TokenStream) -> ASTNode:
             if (next.tokentype in operatortypes) or (next.tokentype == TokenType.RPAREN) or (next.tokentype == TokenType.EOF):
                 valstack.append(VarRefNode(tok.name))
 
-                if len(opstack) > 0 and opstack[-1].tokentype == TokenType.NEGATIVE:
+                # "not next.tokentype == TokenType.EXPONENT" so that a negative held to an exponentiation 
+                # doesn't instead get held to the variable (e.g. -a^2)
+                if len(opstack) > 0 and opstack[-1].tokentype == TokenType.NEGATIVE and not next.tokentype == TokenType.EXPONENT:
                     un_reduce(opstack, valstack)
-                    
+
                 continue
             raise ParseError("Expected operator or rparen after variable reference")
 
@@ -120,12 +124,16 @@ def parse_expression(ts: TokenStream) -> ASTNode:
         if tok.tokentype == TokenType.RPAREN:
             ts.read()  # consume RPAREN
             # reduce until matching LPAREN
+            next = ts.peek()
             while True:
                 if len(opstack) == 0:
                     raise ParseError("Mismatched parentheses")
                 if opstack[-1].tokentype == TokenType.LPAREN:
                     opstack.pop()  # discard LPAREN
-                    if len(opstack) > 0 and opstack[-1].tokentype == TokenType.NEGATIVE:
+
+                    # added "not next.tokentype == TokenType.EXPONENT" so that a negative held to an exponentiation 
+                    # doesn't instead get held to the expression (e.g. -(1+1)^2)
+                    if len(opstack) > 0 and opstack[-1].tokentype == TokenType.NEGATIVE and not next.tokentype == TokenType.EXPONENT:
                         un_reduce(opstack, valstack)
                     break
                 reduce(opstack, valstack)
@@ -218,8 +226,10 @@ def reduce(opstack: list, valstack: list) -> None:
 
     valstack.append(BinOpNode(operator.tokentype, lhs, rhs))
 
-    #if len(opstack) > 0 and opstack[-1].tokentype == TokenType.NEGATIVE:
-        #un_reduce(opstack, valstack)
+    # the below check will only be true if the reduced expression (in the current reduce() call) is an exponentiation, 
+    # and an un_reduce() call was previously skipped because of this (e.g. -2^2)
+    if len(opstack) > 0 and opstack[-1].tokentype == TokenType.NEGATIVE:
+        un_reduce(opstack, valstack)
 
 def un_reduce(opstack: list, valstack: list) -> None:
     opstack.pop()
