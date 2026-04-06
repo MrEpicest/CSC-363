@@ -23,7 +23,7 @@ function Run-Test([string]$base) {
     Write-Host "Running $base..."
 
     # Run compiler
-    python acdc.py $acfile $outTest
+    python3 acdc.py $acfile $outTest
 
     # Compare outputs
     $diff = Compare-Object (Get-Content $outTest) (Get-Content $outExpected)
