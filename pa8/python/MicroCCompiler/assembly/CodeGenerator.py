@@ -223,9 +223,9 @@ class CodeGenerator(AbstractASTVisitor):
     co.code.append(La(addr_temp, address)) # La t0, address
 
     if right.type is Scope.Type.INT:
-      co.code.append(Sw(right.temp, addr_temp, 0)) # Sw t1, 0(t0)   (assuming t1 has a value that we can store)
+      co.code.append(Sw(right.temp, addr_temp, '0')) # Sw t1, 0(t0)   (assuming t1 has a value that we can store)
     elif right.type is Scope.Type.FLOAT:
-      co.code.append(Fsw(right.temp, addr_temp, 0)) # Fsw f1, 0(t0)   (assuming t1 has a value that we can store)
+      co.code.append(Fsw(right.temp, addr_temp, '0')) # Fsw f1, 0(t0)   (assuming t1 has a value that we can store)
 
     return co
 
@@ -291,7 +291,7 @@ class CodeGenerator(AbstractASTVisitor):
 
         temp = self.generateTemp(Scope.Type.INT)
 
-        co.code.append(Lw(temp, addr_temp, 0))        
+        co.code.append(Lw(temp, addr_temp, '0'))        
 
         co.code.append(PutI(temp))
 
@@ -300,7 +300,7 @@ class CodeGenerator(AbstractASTVisitor):
         
         temp = self.generateTemp(Scope.Type.FLOAT)
 
-        co.code.append(Flw(temp, addr_temp, 0))
+        co.code.append(Flw(temp, addr_temp, '0'))
 
         co.code.append(PutF(temp))
 
